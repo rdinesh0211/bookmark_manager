@@ -5,9 +5,13 @@ create table if not exists public.bookmarks (
   url text not null,
   title text not null,
   description text not null default '',
+  favicon_url text,
   tags text[] not null default '{}',
   created_at timestamptz not null default now()
 );
+
+alter table public.bookmarks
+add column if not exists favicon_url text;
 
 alter table public.bookmarks enable row level security;
 

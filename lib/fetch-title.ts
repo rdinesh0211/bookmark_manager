@@ -1,4 +1,7 @@
 const TITLE_REGEX = /<title[^>]*>([\s\S]*?)<\/title>/i;
+const FAVICON_REGEX =
+  /<link[^>]*rel=["'][^"']*(?:icon|shortcut icon|apple-touch-icon)[^"']*["'][^>]*>/gi;
+const HREF_REGEX = /href=["']([^"']+)["']/i;
 
 function decodeHtmlEntities(value: string): string {
   return value
@@ -40,5 +43,55 @@ export function getFallbackTitle(url: string): string {
     return parsed.hostname.replace(/^www\./, "");
   } catch {
     return url;
+  }
+}
+
+export function extractFaviconFromHtml(html: string, pageUrl: string): string | null {
+  const matches = html.match(FAVICON_REGEX);
+  if (!matches || matches.length === 0) {
+    return null;
+  }
+
+  for (const linkTag of matches) {
+    const hrefMatch = linkTag.match(HREF_REGEX);
+    const rawHref = hrefMatch?.[1]?.trim();
+    if (!rawHref) {
+      continue;
+    }
+
+    try {
+      return new URL(rawHref, pageUrl).toString();
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+export async function fetchPageFavicon(url: string): Promise<string> {
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "User-Agent": "bookmark-manager/1.0" },
+      next: { revalidate: 0 }
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      const extracted = extractFaviconFromHtml(html, url);
+      if (extracted) {
+        return extracted;
+      }
+    }
+  } catch {
+    // fallback below
+  }
+
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}/favicon.ico`;
+  } catch {
+    return "";
   }
 }

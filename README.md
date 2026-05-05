@@ -49,8 +49,10 @@ Run the SQL in `supabase/schema.sql` inside Supabase SQL Editor.
 This creates:
 
 - `public.bookmarks` table
-- required columns: `id`, `url`, `title`, `description`, `tags`, `created_at`
+- required columns: `id`, `url`, `title`, `description`, `favicon_url`, `tags`, `created_at`
 - row-level security policies for select/insert/delete
+
+If you already created the table before this update, run `supabase/schema.sql` again to add the new `favicon_url` column safely.
 
 ## 4) Run locally
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchPageTitle, getFallbackTitle } from "@/lib/fetch-title";
+import { fetchPageFavicon, fetchPageTitle, getFallbackTitle } from "@/lib/fetch-title";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { CreateBookmarkPayload } from "@/lib/types";
 
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
 
   const fetchedTitle = await fetchPageTitle(normalizedUrl);
   const title = fetchedTitle ?? getFallbackTitle(normalizedUrl);
+  const faviconUrl = await fetchPageFavicon(normalizedUrl);
 
   const { data, error } = await supabaseServer
     .from("bookmarks")
@@ -73,7 +74,8 @@ export async function POST(request: Request) {
       url: normalizedUrl,
       title,
       description,
-      tags
+      tags,
+      favicon_url: faviconUrl || null
     })
     .select("*")
     .single();
